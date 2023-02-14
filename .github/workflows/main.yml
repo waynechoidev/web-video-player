@@ -20,7 +20,7 @@ jobs:
         env:
           CI: true
           DEPLOY_TARGET: gh-pages
-      - run: cp README.md dist/README.md
+      # - run: cp README.md dist/README.md
       - run: touch dist/.nojekyll
 
       - name: Deploy

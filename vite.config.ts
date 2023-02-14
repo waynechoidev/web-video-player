@@ -1,5 +1,10 @@
 import crossOriginIsolation from "vite-plugin-cross-origin-isolation";
 
 export default {
-  plugins: [crossOriginIsolation()],
+  server: {
+    headers: {
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    },
+  },
 };

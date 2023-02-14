@@ -2,7 +2,7 @@ import { createFFmpeg, fetchFile, FFmpeg } from "@ffmpeg/ffmpeg";
 
 // constant.ts
 const FRAME = 30;
-const STEP = 5;
+const STEP = 1;
 
 let ffmpeg: FFmpeg | null = null;
 
@@ -16,6 +16,7 @@ const transcode = async (e: Event) => {
   const { name } = file;
 
   const duration = await getDuration(file);
+  console.log(duration);
 
   message.innerHTML = "Loading ffmpeg-core.js";
   if (!ffmpeg.isLoaded()) {
@@ -40,7 +41,7 @@ const transcode = async (e: Event) => {
 
   const data = ffmpeg.FS("readFile", "frames20.png");
   const frames: (Uint8Array | null)[] = new Array().fill(null);
-  for (let i = 0; i < 10 * 30; i++) {
+  for (let i = 0; i < STEP * FRAME; i++) {
     frames.push(ffmpeg.FS("readFile", `frames${i + 1}.png`));
   }
 

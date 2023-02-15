@@ -1,75 +1,24 @@
-import { createFFmpeg, fetchFile, FFmpeg } from "@ffmpeg/ffmpeg";
+import { VideoLoader } from "./VideoLoader";
 
-// constant.ts
-const FRAME = 30;
-const STEP = 1;
-
-let ffmpeg: FFmpeg | null = null;
+const videoLoader = new VideoLoader();
 
 const transcode = async (e: Event) => {
-  if (ffmpeg === null) {
-    ffmpeg = createFFmpeg({ log: true });
-  }
-  const message = document.getElementById("message")!;
   const element = e.currentTarget as HTMLInputElement;
   const file = element.files![0];
-  const { name } = file;
-
-  const duration = await getDuration(file);
-  console.log(duration);
-
-  message.innerHTML = "Loading ffmpeg-core.js";
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
-  }
-  ffmpeg.FS("writeFile", name, await fetchFile(file));
-  message.innerHTML = "Start transcoding";
-  await ffmpeg.run(
-    "-i",
-    name,
-    "-t",
-    STEP.toString(),
-    "-r",
-    FRAME.toString(),
-    "-f",
-    "image2",
-    "frames%d.png"
-  );
-  message.innerHTML = "Start Getting Audio";
-  await ffmpeg.run("-i", name, "-vn", "-acodec", "copy", "audio.aac");
-  message.innerHTML = "Complete transcoding";
-
-  const data = ffmpeg.FS("readFile", "frames20.png");
-  const frames: (Uint8Array | null)[] = new Array().fill(null);
-  for (let i = 0; i < STEP * FRAME; i++) {
-    frames.push(ffmpeg.FS("readFile", `frames${i + 1}.png`));
-  }
-
-  console.log(frames);
-  const soundData = ffmpeg.FS("readFile", "audio.aac");
+  await videoLoader.loadFile(file);
+  await videoLoader.extractFrame(1);
 
   const img = document.getElementById("output-img") as HTMLImageElement;
-  img.src = URL.createObjectURL(new Blob([data.buffer]));
+  img.src = URL.createObjectURL(new Blob([videoLoader.getFrame(140)!.buffer]));
 
   const audioPlayer = document.getElementById(
     "audio-player"
   ) as HTMLAudioElement;
-  audioPlayer.src = URL.createObjectURL(new Blob([soundData.buffer]));
+  audioPlayer.src = URL.createObjectURL(
+    new Blob([(await videoLoader.getAudio()).buffer])
+  );
   audioPlayer.currentTime = 0;
   audioPlayer.play();
 };
 const elm = document.getElementById("uploader");
 elm!.addEventListener("change", transcode);
-
-async function getDuration(file: File) {
-  const video = document.createElement("video");
-  video.preload = "metadata";
-  video.src = URL.createObjectURL(file);
-
-  return new Promise((resolve) => {
-    video.onloadedmetadata = () => {
-      window.URL.revokeObjectURL(video.src);
-      resolve(Math.round(video.duration));
-    };
-  });
-}

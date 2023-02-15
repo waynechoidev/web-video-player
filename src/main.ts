@@ -1,24 +1,28 @@
-import { VideoLoader } from "./VideoLoader";
+import { finishLoad, startLoad } from "./ui-control";
+import { VideoLoader } from "./video-loader";
+
+const elm = document.getElementById("uploader");
+const audioPlayer = document.getElementById("audio-player") as HTMLAudioElement;
+// const img = document.getElementById("output-img") as HTMLImageElement;
 
 const videoLoader = new VideoLoader();
 
-const transcode = async (e: Event) => {
-  const element = e.currentTarget as HTMLInputElement;
-  const file = element.files![0];
-  await videoLoader.loadFile(file);
-  await videoLoader.extractFrame(1);
+function main() {
+  elm?.addEventListener("change", async (e: Event) => {
+    startLoad();
+    const element = e.currentTarget as HTMLInputElement;
+    const file = element.files![0];
+    await videoLoader.loadFile(file);
+    audioPlayer.src = URL.createObjectURL(
+      new Blob([(await videoLoader.getAudio()).buffer])
+    );
+    finishLoad();
+  });
 
-  const img = document.getElementById("output-img") as HTMLImageElement;
-  img.src = URL.createObjectURL(new Blob([videoLoader.getFrame(140)!.buffer]));
+  //   img.src = URL.createObjectURL(new Blob([videoLoader.getFrame(140)!.buffer]));
 
-  const audioPlayer = document.getElementById(
-    "audio-player"
-  ) as HTMLAudioElement;
-  audioPlayer.src = URL.createObjectURL(
-    new Blob([(await videoLoader.getAudio()).buffer])
-  );
-  audioPlayer.currentTime = 0;
-  audioPlayer.play();
-};
-const elm = document.getElementById("uploader");
-elm!.addEventListener("change", transcode);
+  //   audioPlayer.currentTime = 0;
+  //   audioPlayer.play();
+}
+
+main();

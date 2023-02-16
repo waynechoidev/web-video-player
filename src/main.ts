@@ -3,7 +3,7 @@ import { VideoLoader } from "./video-loader";
 
 const elm = document.getElementById("uploader");
 const audioPlayer = document.getElementById("audio-player") as HTMLAudioElement;
-// const img = document.getElementById("output-img") as HTMLImageElement;
+const img = document.getElementById("output-img") as HTMLImageElement;
 
 const videoLoader = new VideoLoader();
 
@@ -16,10 +16,11 @@ function main() {
     audioPlayer.src = URL.createObjectURL(
       new Blob([(await videoLoader.getAudio()).buffer])
     );
+    img.src = URL.createObjectURL(
+      new Blob([videoLoader.getFrame(140)!.buffer])
+    );
     finishLoad();
   });
-
-  //   img.src = URL.createObjectURL(new Blob([videoLoader.getFrame(140)!.buffer]));
 
   //   audioPlayer.currentTime = 0;
   //   audioPlayer.play();

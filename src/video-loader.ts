@@ -1,8 +1,8 @@
 import { createFFmpeg, fetchFile, FFmpeg } from "@ffmpeg/ffmpeg";
 
 export class VideoLoader {
-  private FRAME: number = 30;
-  private STEP: number = 5;
+  private readonly FRAME: number = 30;
+  private readonly STEP: number = 5;
 
   private _ffmpeg: FFmpeg;
   private _file?: File;

@@ -1,8 +1,8 @@
 import { createFFmpeg, fetchFile, FFmpeg } from "@ffmpeg/ffmpeg";
 
 export class VideoLoader {
-  private readonly FRAME: number = 30;
-  private readonly STEP: number = 5;
+  private _frame: number;
+  private _step: number;
 
   private _ffmpeg: FFmpeg;
   private _file?: File;
@@ -10,7 +10,9 @@ export class VideoLoader {
   private _totalDuration: number = 0;
   private _frames?: (Uint8Array | null)[];
 
-  constructor() {
+  constructor(frame: number, step: number) {
+    this._frame = frame;
+    this._step = step;
     this._ffmpeg = createFFmpeg({ log: true });
   }
 
@@ -19,11 +21,15 @@ export class VideoLoader {
     this._name = this._file.name;
 
     this._totalDuration = await this.getDuration();
-    this._frames = new Array(this.FRAME * this._totalDuration).fill(null);
+    this._frames = new Array(this._frame * this._totalDuration).fill(null);
 
     if (!this._ffmpeg.isLoaded()) {
       await this._ffmpeg.load();
     }
+
+    this._ffmpeg.FS("writeFile", this._name, await fetchFile(this._file));
+    // this._ffmpeg.FS("writeFile", `_${this._name}`, await fetchFile(this._file));
+    // this._ffmpeg.run("-i", `_${this._name}`, "-vf", "scale=144:-2", this._name);
 
     await this.extractFrame(0);
   }
@@ -31,14 +37,12 @@ export class VideoLoader {
   async extractFrame(index: number) {
     if (!this._frames) return;
 
-    const start = index * this.STEP;
+    const start = index * this._step;
     const duration =
-      this._totalDuration - start < this.STEP
+      this._totalDuration - start < this._step
         ? this._totalDuration - start
-        : this.STEP;
-    const startNumber = start * this.FRAME;
-
-    this._ffmpeg.FS("writeFile", this._name, await fetchFile(this._file));
+        : this._step;
+    const startNumber = start * this._frame;
 
     await this._ffmpeg.run(
       "-i",
@@ -50,12 +54,12 @@ export class VideoLoader {
       "-start_number",
       startNumber.toString(), // start number
       "-r",
-      this.FRAME.toString(), // frame rate
+      this._frame.toString(), // frame rate
       "-f",
       "image2", // file format
       "frames%d.png" // file name pattern
     );
-    for (let i = startNumber; i < startNumber + this.FRAME * this.STEP; i++) {
+    for (let i = startNumber; i < startNumber + this._frame * this._step; i++) {
       this._frames[i] = this._ffmpeg.FS("readFile", `frames${i}.png`);
     }
   }

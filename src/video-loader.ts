@@ -64,9 +64,17 @@ export class VideoLoader {
     }
   }
 
+  checkFrame(index: number) {
+    if (this._frames![index]) return true;
+    else return false;
+  }
+
   getFrame(index: number) {
-    if (!this._frames) return;
-    return this._frames[index];
+    return this._frames![index];
+  }
+
+  getCount() {
+    return this._totalDuration / this._step;
   }
 
   async getAudio() {

@@ -63,9 +63,12 @@ body {
   justify-content: center;
 }
 
-#output-img {
-  width: 100%;
+#control {
+  height: 30px;
+  display: flex;
+  align-items: center;
 }
+
 /* 
 h1 {
   font-size: 3.2em;

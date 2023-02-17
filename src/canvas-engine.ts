@@ -19,7 +19,7 @@ export class CanvasEngine {
     // get element
     this._canvas = document.getElementById("canvas") as HTMLCanvasElement;
     this._canvas.width = window.innerWidth * 0.8;
-    this._canvas.height = 300;
+    this._canvas.height = window.innerHeight * 0.6;
 
     // get context
     this._gl = this._canvas.getContext("webgl2");
@@ -39,9 +39,6 @@ export class CanvasEngine {
     if (!this._gl.getProgramParameter(this._program, this._gl.LINK_STATUS)) {
       console.error(this._gl.getProgramInfoLog(this._program));
     }
-
-    this._buffer = this.createAndBindBuffer(this._vertices);
-    this._texBuffer = this.createAndBindBuffer(this._textureCoordinates);
   }
 
   updateImage(src: string) {
@@ -50,8 +47,9 @@ export class CanvasEngine {
     const image = new Image();
     image.src = src;
     image.onload = () => {
-      this._canvas.height = (image.height * this._canvas.width) / image.width;
-      this._buffer = this.createAndBindBuffer(this._vertices);
+      this._buffer = this.createAndBindBuffer(this.getAspectRatio(image)!);
+      this._texBuffer = this.createAndBindBuffer(this._textureCoordinates);
+
       this.createAndBindTexture(image);
       this.render();
     };
@@ -150,6 +148,37 @@ export class CanvasEngine {
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, buffer);
     this._gl.vertexAttribPointer(position, 2, this._gl.FLOAT, false, 0, 0);
     return position;
+  }
+
+  private getAspectRatio(image: HTMLImageElement) {
+    if (!this._gl) return;
+    var cols = image.width;
+    var rows = image.height;
+    var imageAR = cols / rows;
+    var canvasAR = this._gl.canvas.width / this._gl.canvas.height;
+    var startX, startY, renderableW, renderableH;
+    if (imageAR < canvasAR) {
+      renderableH = this._gl.canvas.height;
+      renderableW = cols * (renderableH / rows);
+      startX = (this._gl.canvas.width - renderableW) / 2;
+      startY = 0;
+    } else if (imageAR > canvasAR) {
+      renderableW = this._gl.canvas.width;
+      renderableH = rows * (renderableW / cols);
+      startX = 0;
+      startY = (this._gl.canvas.height - renderableH) / 2;
+    } else {
+      startX = 0;
+      startY = 0;
+      renderableW = this._gl.canvas.width;
+      renderableH = this._gl.canvas.height;
+    }
+    return this.prepareRectVec2(
+      -1.0 + (startX / this._canvas.width) * 2,
+      -1.0 + (startY / this._canvas.height) * 2,
+      -1.0 + ((startX + renderableW) / this._canvas.width) * 2,
+      -1.0 + ((startY + renderableH) / this._canvas.height) * 2
+    );
   }
 
   private render() {

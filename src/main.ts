@@ -11,7 +11,10 @@ const audioPlayer = document.getElementById("audio-player") as HTMLAudioElement;
 const playButton = document.getElementById("play");
 const stopButton = document.getElementById("stop");
 const playTime = document.getElementById("play-time");
+const percent = document.getElementById("percent");
 playTime!.innerHTML = "00:00 / 00:00";
+
+let isLoading = true;
 
 const videoLoader = new VideoLoader(FRAME, STEP);
 const canvasEngine = new CanvasEngine();
@@ -55,6 +58,7 @@ const step = (timestamp: number) => {
     return stop();
   }
 
+  percent!.innerHTML = videoLoader.getPercentage() ?? "";
   requestId = requestAnimationFrame(step);
 };
 
@@ -78,6 +82,7 @@ function stop() {
 
 async function extractFrames(start: number, end: number) {
   if (start > end) return;
+  if (!isLoading) return;
 
   await videoLoader.extractFrame(start);
   await extractFrames(start + 1, end);

@@ -77,6 +77,16 @@ export class VideoLoader {
     return sanitizeSeconds(this._totalDuration);
   }
 
+  getPercentage() {
+    if (!this._frames) return;
+
+    return `${Math.round(
+      (this._frames.filter((item) => item !== null).length /
+        this._frames.length) *
+        100
+    )}%`;
+  }
+
   async getAudio() {
     await this._ffmpeg.run(
       "-i",

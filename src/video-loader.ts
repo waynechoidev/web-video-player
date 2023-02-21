@@ -1,4 +1,5 @@
 import { createFFmpeg, fetchFile, FFmpeg } from "@ffmpeg/ffmpeg";
+import { sanitizeSeconds } from "./utils";
 
 export class VideoLoader {
   private _frame: number;
@@ -70,6 +71,10 @@ export class VideoLoader {
 
   getCount() {
     return this._totalDuration / this._step - 1;
+  }
+
+  getTotalDuration() {
+    return sanitizeSeconds(this._totalDuration);
   }
 
   async getAudio() {

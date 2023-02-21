@@ -1,5 +1,6 @@
 import { CanvasEngine } from "./canvas-engine";
 import { finishLoad, startLoad } from "./ui-control";
+import { sanitizeSeconds } from "./utils";
 import { VideoLoader } from "./video-loader";
 
 const FRAME = 20;
@@ -9,6 +10,8 @@ const elm = document.getElementById("uploader");
 const audioPlayer = document.getElementById("audio-player") as HTMLAudioElement;
 const playButton = document.getElementById("play");
 const stopButton = document.getElementById("stop");
+const playTime = document.getElementById("play-time");
+playTime!.innerHTML = "00:00 / 00:00";
 
 const videoLoader = new VideoLoader(FRAME, STEP);
 const canvasEngine = new CanvasEngine();
@@ -30,6 +33,7 @@ elm?.addEventListener("change", async (e: Event) => {
   );
   canvasEngine.updateImage(imgSrc);
   finishLoad();
+  playTime!.innerHTML = `00:00 / ${videoLoader.getTotalDuration()}`;
   extractFrames(1, videoLoader.getCount());
 });
 
@@ -39,6 +43,9 @@ const step = (timestamp: number) => {
   }
   const elapsed = timestamp - startTimeStamp;
   index = startFrame + Math.round((elapsed * FRAME) / 1000);
+  playTime!.innerHTML = `${sanitizeSeconds(
+    index / FRAME
+  )} / ${videoLoader.getTotalDuration()}`;
 
   const frame = videoLoader.getFrame(index);
   if (frame) {

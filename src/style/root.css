@@ -68,6 +68,10 @@ body {
   align-items: center;
 }
 
+#play-time {
+  padding-left: 10px;
+  color: #000;
+}
 /* 
 h1 {
   font-size: 3.2em;

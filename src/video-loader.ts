@@ -64,17 +64,12 @@ export class VideoLoader {
     }
   }
 
-  checkFrame(index: number) {
-    if (this._frames![index]) return true;
-    else return false;
-  }
-
   getFrame(index: number) {
     return this._frames![index];
   }
 
   getCount() {
-    return this._totalDuration / this._step;
+    return this._totalDuration / this._step - 1;
   }
 
   async getAudio() {

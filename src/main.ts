@@ -9,7 +9,6 @@ const elm = document.getElementById("uploader");
 const audioPlayer = document.getElementById("audio-player") as HTMLAudioElement;
 const playButton = document.getElementById("play");
 const stopButton = document.getElementById("stop");
-// const img = document.getElementById("output-img") as HTMLImageElement;
 
 const videoLoader = new VideoLoader(FRAME, STEP);
 const canvasEngine = new CanvasEngine();
@@ -40,12 +39,15 @@ const step = (timestamp: number) => {
   }
   const elapsed = timestamp - startTimeStamp;
   index = startFrame + Math.round((elapsed * FRAME) / 1000);
-  if (!videoLoader.checkFrame(index)) stop();
 
-  const imgSrc = URL.createObjectURL(
-    new Blob([videoLoader.getFrame(index)!.buffer])
-  ); // TODO: getFrame methods shoudl return boolean, and check buffering with this.
-  canvasEngine.updateImage(imgSrc);
+  const frame = videoLoader.getFrame(index);
+  if (frame) {
+    const imgSrc = URL.createObjectURL(new Blob([frame!.buffer]));
+    canvasEngine.updateImage(imgSrc);
+  } else {
+    return stop();
+  }
+
   requestId = requestAnimationFrame(step);
 };
 
@@ -64,6 +66,7 @@ function stop() {
   cancelAnimationFrame(requestId!);
   audioPlayer.pause();
   startFrame = index;
+  console.log("stop");
 }
 
 async function extractFrames(start: number, end: number) {

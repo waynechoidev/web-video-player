@@ -1,89 +1,86 @@
 import { CanvasEngine } from "./canvas-engine";
-import { finishLoad, startLoad } from "./ui-control";
-import { sanitizeSeconds } from "./utils";
-import { VideoLoader } from "./video-loader";
 
-const FRAME = 20;
-const STEP = 5;
-
-const elm = document.getElementById("uploader");
-const audioPlayer = document.getElementById("audio-player") as HTMLAudioElement;
-const playButton = document.getElementById("play");
-const stopButton = document.getElementById("stop");
+const elm = document.getElementById("uploader") as HTMLInputElement;
+const video = document.createElement("video");
+// const audioPlayer = document.getElementById("audio-player") as HTMLAudioElement;
+const playButton = document.getElementById("play") as HTMLButtonElement;
+playButton!.disabled = true;
+const stopButton = document.getElementById("stop") as HTMLButtonElement;
+stopButton!.disabled = true;
 const playTime = document.getElementById("play-time");
-const percent = document.getElementById("percent");
 playTime!.innerHTML = "00:00 / 00:00";
 
-let isLoading = true;
-
-const videoLoader = new VideoLoader(FRAME, STEP);
+// const videoLoader = new VideoLoader(FRAME, STEP);
 const canvasEngine = new CanvasEngine();
-let startTimeStamp: number | null;
-let startFrame = 0;
-let index = 0;
-let requestId: number | null;
 
-elm?.addEventListener("change", async (e: Event) => {
-  startLoad();
-  const element = e.currentTarget as HTMLInputElement;
-  const file = element.files![0];
-  await videoLoader.loadFile(file);
-  audioPlayer.src = URL.createObjectURL(
-    new Blob([(await videoLoader.getAudio()).buffer])
-  );
-  const imgSrc = URL.createObjectURL(
-    new Blob([videoLoader.getFrame(0)!.buffer])
-  );
-  canvasEngine.updateImage(imgSrc);
-  finishLoad();
-  playTime!.innerHTML = `00:00 / ${videoLoader.getTotalDuration()}`;
-  extractFrames(1, videoLoader.getCount());
+elm?.addEventListener("change", () => {
+  // startLoad();
+  const file = elm.files![0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    video.src = url;
+    video.preload = "metadata";
+    video.load();
+    video.addEventListener("loadedmetadata", () => {
+      const video_ratio = video.videoWidth / video.videoHeight;
+      const maxWidth = window.innerWidth * 0.8;
+      const maxHeight = window.innerHeight * 0.5;
+      const max_ratio = maxWidth / maxHeight;
+
+      let width: number;
+      let height: number;
+
+      if (video_ratio > max_ratio) {
+        width = maxWidth;
+        height = maxWidth / video_ratio;
+      } else {
+        height = maxHeight;
+        width = maxHeight * video_ratio;
+      }
+
+      canvasEngine.initialize(width, height);
+    });
+  }
+  video.crossOrigin = "anonymous";
+  video.autoplay = true;
+  stopButton!.disabled = false;
+  step();
 });
 
-const step = (timestamp: number) => {
-  if (!startTimeStamp) {
-    startTimeStamp = timestamp;
-  }
-  const elapsed = timestamp - startTimeStamp;
-  index = startFrame + Math.round((elapsed * FRAME) / 1000);
-  playTime!.innerHTML = `${sanitizeSeconds(
-    index / FRAME
-  )} / ${videoLoader.getTotalDuration()}`;
-
-  const frame = videoLoader.getFrame(index);
-  if (frame) {
-    const imgSrc = URL.createObjectURL(new Blob([frame!.buffer]));
-    canvasEngine.updateImage(imgSrc);
-  } else {
-    return stop();
+function step() {
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvasEngine.updateImage(video);
   }
 
-  percent!.innerHTML = videoLoader.getPercentage() ?? "";
-  requestId = requestAnimationFrame(step);
-};
+  requestAnimationFrame(step);
+}
 
 playButton?.addEventListener("click", () => {
-  startTimeStamp = null;
-  audioPlayer.currentTime = startFrame / FRAME;
-  audioPlayer.play();
-  requestId = requestAnimationFrame(step);
+  video.play();
+  playButton!.disabled = true;
+  stopButton!.disabled = false;
 });
 
 stopButton?.addEventListener("click", () => {
-  stop();
+  video.pause();
+  playButton!.disabled = false;
+  stopButton!.disabled = true;
 });
 
-function stop() {
-  cancelAnimationFrame(requestId!);
-  audioPlayer.pause();
-  startFrame = index;
-  console.log("stop");
+function updateTime() {
+  const curTime = video.currentTime;
+  const totalTime = video.duration;
+  const curTimeString = formatTime(curTime);
+  const totalTimeString = formatTime(totalTime);
+  playTime!.innerHTML = `${curTimeString} / ${totalTimeString}`;
 }
 
-async function extractFrames(start: number, end: number) {
-  if (start > end) return;
-  if (!isLoading) return;
-
-  await videoLoader.extractFrame(start);
-  await extractFrames(start + 1, end);
+function formatTime(time: number): string {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  const minutesString = minutes < 10 ? `0${minutes}` : `${minutes}`;
+  const secondsString = seconds < 10 ? `0${seconds}` : `${seconds}`;
+  return `${minutesString}:${secondsString}`;
 }
+
+video.addEventListener("timeupdate", updateTime);

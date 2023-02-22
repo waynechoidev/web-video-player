@@ -1305,16 +1305,8 @@ __metadata:
     "@ffmpeg/ffmpeg": ^0.11.6
     typescript: ^4.9.5
     vite: ^4.1.0
-    vite-plugin-cross-origin-isolation: ^0.1.6
   languageName: unknown
   linkType: soft
-
-"vite-plugin-cross-origin-isolation@npm:^0.1.6":
-  version: 0.1.6
-  resolution: "vite-plugin-cross-origin-isolation@npm:0.1.6"
-  checksum: 70170cbd20c82dd27f55eb0b1a49f7f1627542bde5ca3a6f03a569d6575d61e8730f8990383df3a92da7b0cbf9ac29d2d9cc599ac22c4b3058e7a19dcbb90a38
-  languageName: node
-  linkType: hard
 
 "vite@npm:^4.1.0":
   version: 4.1.1

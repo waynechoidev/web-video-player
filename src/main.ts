@@ -14,7 +14,7 @@ playTime!.innerHTML = "00:00 / 00:00";
 const canvasEngine = new CanvasEngine();
 
 elm?.addEventListener("change", () => {
-  // startLoad();
+  // startLoad()
   const file = elm.files![0];
   if (file) {
     const url = URL.createObjectURL(file);
